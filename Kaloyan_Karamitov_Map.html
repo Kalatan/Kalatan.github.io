@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+	<meta charset='utf-8' />
+	<title>Skiers in Europe</title>
+	<script src='https://api.mapbox.com/mapbox-gl-js/v0.32.1/mapbox-gl.js'></script>
+	<link href='https://api.mapbox.com/mapbox-gl-js/v0.32.1/mapbox-gl.css' rel='stylesheet'/>
+
+</head>
+<body>
+
+	<div id='map'></div>
+	<div class='map-overlay' id='features'><h1>Skiers in Europe</h1><div id='pd'><p>Hover over a country!</p></div></div>
+	<div class='map-overlay' id='legend'></div>
+	<nav id='menu'></nav>
+
+<style>
+	body {
+	  margin: 0;
+	  padding: 0;
+	}
+
+	h1 {
+	  margin: 10px;
+	  font-size: 1.3em;
+	}
+
+	h3 {
+	  margin: 10px;
+	  font-size: 1em;
+	}
+
+	p {
+	  font-size: 0.85em;
+	  margin: 10px;
+	}
+
+	#map {
+	  position: absolute;
+	  top: 0;
+	  bottom: 0;
+	  width: 100%;
+	}
+
+	.map-overlay {
+	  position: absolute;
+	  bottom: 0;
+	  right: 0;
+	  margin-left: 20px;
+	  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+	  background: rgba(255, 255, 255, 0.8);
+	  font-family: Verdana, sans-serif;
+	  overflow: auto;
+	  border-radius: 5px;
+	}
+
+	#features {
+	  top: 0;
+	  left: 0;
+	  height: 105px;
+	  margin-top: 20px;
+	  width: 380px;
+	}
+
+	#legend {
+	  left: 0;
+	  padding: 10px;
+	  line-height: 18px;
+	  height: 145px;
+	  margin-bottom: 40px;
+	  width: 155px;
+	}
+
+    #menu {
+        background: #fff;
+        position: absolute;
+        z-index: 1;
+        top: 20px;
+        right: 20px;
+        border-radius: 5px;
+        width: 120px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        background: rgba(255, 255, 255, 0.8);
+        border: 1px solid rgba(200,200,200,0.4);
+        font-family: Verdana, sans-serif;
+    }
+
+    #menu a {
+        font-size: 13px;
+        color: #404040;
+        display: block;
+        margin: 0;
+        padding: 0;
+        padding: 10px;
+        border-radius: 5px;
+        text-decoration: none;
+        text-align: center;
+    }
+
+    #menu a:last-child {
+        border: none;
+    }
+
+    #menu a:hover {
+        background-color: #e9e9e9;
+    }
+
+    #menu a.active {
+        background: rgba(56, 135, 190, 0.8);
+        color: #ffffff;
+    }
+
+    #menu a.active:hover {
+        background: #3074a4;
+    }
+
+	.legend-key {
+	  display: inline-block;
+	  border-radius: 20%;
+	  width: 10px;
+	  height: 10px;
+	  margin-right: 5px;
+	}
+</style>
+
+<script>
+mapboxgl.accessToken = 'pk.eyJ1Ijoia2FsYXRhIiwiYSI6ImNpeHJ1ZnJsODAwNHczNHFpc3cwNmh0cXEifQ.w2O-PBuhc_Jy2OComrdBTw';
+var map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/kalata/ciysrl8kd001c2sud4fpnwt1t'
+});
+
+map.on('load', function() {
+	var layers = ['Skiers > 30%', 'Skiers 20 - 30%', 'Skiers 15 - 20%', 'Skiers 10 - 15%', 'Skiers 5 - 10%', 'Skiers < 5%', 'no Skiers percentage data', 'Skiers > 10 mil', 'Skiers 5 - 10 mil', 'Skiers 3 - 5 mil', 'Skiers 1 - 3 mil', 'Skiers 0.5 - 1 mil', 'Skiers < 0.5 mil', 'no Skiers count data'];
+
+	 layers.forEach(function (layer) {
+		var vis = map.getLayoutProperty(layer, 'visibility');
+
+		if (vis === 'visible') {
+		  var color = map.getPaintProperty(layer, 'fill-color');
+		  var item = document.createElement('div');
+		  var key = document.createElement('span');
+		  key.className = 'legend-key';
+		  key.style.backgroundColor = color;
+
+		  var value = document.createElement('span');
+		  value.innerHTML = layer;
+		  item.appendChild(key);
+		  item.appendChild(value);
+		  legend.appendChild(item);
+	     } 
+      });
+	    
+	map.on('mousemove', function(e) {
+	  var states = map.queryRenderedFeatures(e.point, {
+	    layers: layers
+	  });
+
+	  if (states.length > 0 && states[0].properties.Skiers.toLocaleString() === '0' ) {	  	
+	  		document.getElementById('pd').innerHTML = '<h3><strong>' + states[0].properties.NAME_ENGLI + '</strong></h3><p><em> no data for skiers</em></p>';
+  	  } else if (states.length > 0) {
+	    document.getElementById('pd').innerHTML = '<h3><strong>' + states[0].properties.NAME_ENGLI + '</strong></h3><p><strong><em>' + states[0].properties.Skiers.toLocaleString() + '</strong> skiers of <strong><em>' + states[0].properties.Population.toLocaleString() + '</strong> total population</em></p>';	    
+	  } else {
+	    document.getElementById('pd').innerHTML = '<p>Hover over a country!</p>';
+	  }
+	});
+
+	var link = document.createElement('a');
+	link.href = '#';
+	link.className = 'active';
+	link.textContent = "Switch to Percentage";
+	link.onclick = function (e) {
+	    for(var index in layers) {
+	      var clickedLayer = layers[index];
+	      e.preventDefault();
+	      e.stopPropagation();
+	  
+	      var visibility = map.getLayoutProperty(clickedLayer, 'visibility');
+	  
+	      if (visibility === 'visible') {
+	          map.setLayoutProperty(clickedLayer, 'visibility', 'none');
+	      } else {
+	          map.setLayoutProperty(clickedLayer, 'visibility', 'visible');	      
+	      }
+	    }
+
+	      if (this.className == 'active') {
+	      	  this.className = '';
+	      	  this.textContent = "Switch to Count";
+	      	  	map.on('mousemove', function(e) {
+				  var states = map.queryRenderedFeatures(e.point, {
+				    layers: layers
+				  });
+				  if (states.length > 0 && states[0].properties.Skiers.toLocaleString() === '0' ) {	  	
+				  		document.getElementById('pd').innerHTML = '<h3><strong>' + states[0].properties.NAME_ENGLI + '</strong></h3><p><em> no data for skiers</em></p>';
+			  	  } else if (states.length > 0) {
+				    document.getElementById('pd').innerHTML = '<h3><strong>' + states[0].properties.NAME_ENGLI + '</strong></h3><p><strong><em>' + states[0].properties.Ski_Percen + '%' + '</strong> skiers of <strong><em>' + states[0].properties.Population.toLocaleString() + '</strong> total population</em></p>';	    
+				  } else {
+				    document.getElementById('pd').innerHTML = '<p>Hover over a country!</p>';
+				  }
+				});
+	      } else {
+	      	  this.className = 'active';
+	      	  this.textContent = "Switch to Percentage";
+      	  	  map.on('mousemove', function(e) {
+				  var states = map.queryRenderedFeatures(e.point, {
+				    layers: layers
+				  });
+
+				  if (states.length > 0 && states[0].properties.Skiers.toLocaleString() === '0' ) {	  	
+				  		document.getElementById('pd').innerHTML = '<h3><strong>' + states[0].properties.NAME_ENGLI + '</strong></h3><p><em> no data for skiers</em></p>';
+			  	  } else if (states.length > 0) {
+				    document.getElementById('pd').innerHTML = '<h3><strong>' + states[0].properties.NAME_ENGLI + '</strong></h3><p><strong><em>' + states[0].properties.Skiers.toLocaleString() + '</strong> skiers of <strong><em>' + states[0].properties.Population.toLocaleString() + '</strong> total population</em></p>';	    
+				  } else {
+				    document.getElementById('pd').innerHTML = '<p>Hover over a country!</p>';
+				  }
+			   });
+	        }	      
+
+	    document.getElementById('legend').innerHTML = ''; 
+
+		layers.forEach(function (layer) {
+			var vis = map.getLayoutProperty(layer, 'visibility');
+
+			if (vis === 'visible') {
+			  var color = map.getPaintProperty(layer, 'fill-color');
+			  var item = document.createElement('div');
+			  var key = document.createElement('span');
+			  key.className = 'legend-key';
+			  key.style.backgroundColor = color;
+
+			  var value = document.createElement('span');
+			  value.innerHTML = layer;
+			  item.appendChild(key);
+			  item.appendChild(value);
+			  legend.appendChild(item);
+		     } 
+	    });
+	};
+
+	var button = document.getElementById('menu');
+	button.appendChild(link);
+
+	map.getCanvas().style.cursor = 'default';
+
+	map.fitBounds([[-5.2421875, 32.972741], [27.63671875, 59.696361]]);
+});
+
+</script>
+</body>
+</html>
